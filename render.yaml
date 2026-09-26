@@ -1,0 +1,35 @@
+# Render "Blueprint" — pushing this file to your repo root lets Render
+# create both the web service and the database from one "New +" > "Blueprint"
+# click, instead of configuring each by hand.
+databases:
+  - name: trash-safari-db
+    plan: free
+    databaseName: trash_safari
+    user: trash_safari
+
+services:
+  - type: web
+    name: trash-safari-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run migrate && npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: trash-safari-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_PUBLIC_BASE_URL
+        sync: false
