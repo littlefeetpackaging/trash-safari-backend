@@ -27,7 +27,7 @@ render.yaml               one-click Render Blueprint (web service + Postgres)
 | `GET /reports/nearby?lat=&lng=` | Bearer | pending reports near a point, for the collector map |
 | `POST /verifications` | Bearer, role `collector` | confirm/dispute a report |
 | `POST /pickups` | Bearer, role `collector` | bundle your own confirmed verifications into one pickup |
-| `POST /uploads/photo-upload-url` | Bearer | get a signed URL to upload a photo directly to object storage |
+| `POST /uploads/photo-upload-url?size_bytes=N` | Bearer | get a signed URL to upload a photo directly to object storage; rejects with `413` above 5MB |
 | `POST /collector-application` | Bearer | apply to become a collector (real name + phone) — sets `collector_status: pending` for an admin to review |
 | `POST /ads/complete` | Bearer | credit points for a watched rewarded ad (capped at 5/day) — **see the AdMob SSV warning in `src/routes/ads.js` before shipping this live** |
 | `GET /leaderboard?scope=spotter\|impact&period=alltime\|weekly\|monthly` | Bearer | ranked users |
@@ -48,6 +48,16 @@ UPDATE users SET roles = array_append(roles, 'admin') WHERE email = 'you@example
 Run that once against the production database (Render's dashboard has a
 built-in SQL console under the database's **Connect** tab), and that account
 can review collector applications and adjust points from then on.
+
+### Photo size limits
+
+Client-side, the game already compresses the capture snapshot before
+upload. Server-side, `/uploads/photo-upload-url` requires the caller to
+state the exact upload size and rejects anything over 5MB with a `413` —
+this is enforced by R2 itself (the size is baked into the signed URL), not
+just trusted from the client. At a realistic compressed size (~100-300KB
+per photo), the free 10GB R2 tier holds roughly 50,000 reports before any
+storage cost kicks in.
 
 ### Wiring up the game (`trash-safari-standalone.html`)
 
